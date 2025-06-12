@@ -1,3 +1,4 @@
+// SignUp.jsx
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -30,16 +31,22 @@ const SignUp = () => {
 
     try {
       const { username, email, password } = values
-      const response = await axios.post('/api/auth/register', {
+      // *** PERBAIKAN DI SINI: Ubah URL API ***
+      // Gunakan '/auth/register' agar Vite proxy '/auth' dapat bekerja dengan benar
+      const response = await axios.post('/auth/register', { // <-- Hapus '/api' di sini
         username,
         email,
         password
       })
       if (response.status === 201) {
+        alert('Registration successful! Please log in.') // Opsional: Beri tahu pengguna
         navigate('/login')
       }
     } catch (err) {
-      console.log(err.message)
+      // Lebih baik menangani error Axios secara spesifik
+      const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred during registration.";
+      console.error("Sign Up Error:", errorMessage);
+      alert(errorMessage);
     }
   }
 
@@ -71,6 +78,7 @@ const SignUp = () => {
             name="username"
             value={values.username}
             onChange={handleChanges}
+            required
           />
           <input
             className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -79,6 +87,7 @@ const SignUp = () => {
             name="email"
             value={values.email}
             onChange={handleChanges}
+            required
           />
           <input
             className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -87,6 +96,7 @@ const SignUp = () => {
             name="password"
             value={values.password}
             onChange={handleChanges}
+            required
           />
           <input
             className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -95,6 +105,7 @@ const SignUp = () => {
             name="confirmPassword"
             value={values.confirmPassword}
             onChange={handleChanges}
+            required
           />
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <input
