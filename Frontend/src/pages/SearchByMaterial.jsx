@@ -11,6 +11,15 @@ export default function SearchMaterial() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
 
+  // State untuk melacak status login
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Cek token saat komponen dimuat atau ada perubahan
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token); // !!token akan menjadi true jika token ada, false jika null/undefined
+  }, []); // Hanya jalankan sekali saat komponen dimuat
+
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -41,6 +50,17 @@ export default function SearchMaterial() {
   const filteredVideos = videos.filter(video =>
     video.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fungsi untuk menangani klik tombol "Watch Now"
+  const handleWatchNowClick = (videoId) => {
+    if (isLoggedIn) {
+      navigate(`/watch/${videoId}`); // Arahkan ke halaman video jika sudah login
+    } else {
+      alert('You must be logged in to watch videos.'); // Tampilkan alert jika belum login
+      // Opsional: Anda bisa mengarahkan ke halaman login setelah alert
+      // navigate('/login');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col mb-10">
@@ -77,16 +97,17 @@ export default function SearchMaterial() {
             <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full mt-1 shadow-lg">
               {suggestions.map((video, idx) => (
                 <li key={idx}>
-                  <Link
-                    to={`/watch/${video.id}`}
+                  {/* Perbaikan: Ganti Link dengan button atau tangani click langsung */}
+                  <button
                     onClick={() => {
-                      setSuggestions([]);
-                      setSearchQuery('');
+                        handleWatchNowClick(video.id); // Menggunakan fungsi handleWatchNowClick
+                        setSuggestions([]);
+                        setSearchQuery('');
                     }}
-                    className="block px-4 py-2 hover:bg-green-100 text-gray-800"
+                    className="block w-full text-left px-4 py-2 hover:bg-green-100 text-gray-800"
                   >
                     {video.title}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -99,35 +120,47 @@ export default function SearchMaterial() {
 
       {/* Daftar Video */}
       <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVideos.map((video, index) => (
-            <div key={video._id || index} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-4 pb-2">
-                <p className="text-xs text-gray-500 mb-1 flex justify-between">
-                  <span>Uploaded by {video.uploader}</span>
-                  <span>{video.date}</span>
-                </p>
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="w-full h-48 object-cover rounded-md mb-3"
-                />
-                <h3 className="text-md font-semibold text-gray-800 mb-1">{video.title}</h3>
-                <p className="text-xs text-gray-600 mb-3">Material: {video.material}</p>
-                <div className="flex items-center justify-between">
-                  <Link to={`/watch/${video.id}`}>
-                    <button className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition">
+        {filteredVideos.length === 0 && searchQuery.length > 0 ? (
+            <p className="text-center text-gray-600 text-xl mt-5">
+                No videos found matching "{searchQuery}" for this material.
+            </p>
+        ) : filteredVideos.length === 0 && searchQuery.length === 0 ? (
+            <p className="text-center text-gray-600 text-xl mt-5">
+                No videos available for this material.
+            </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVideos.map((video, index) => (
+              <div key={video.id || index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="p-4 pb-2">
+                  <p className="text-xs text-gray-500 mb-1 flex justify-between">
+                    <span>Uploaded by {video.uploader}</span>
+                    <span>{video.date}</span>
+                  </p>
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-48 object-cover rounded-md mb-3"
+                  />
+                  <h3 className="text-md font-semibold text-gray-800 mb-1">{video.title}</h3>
+                  <p className="text-xs text-gray-600 mb-3">Material: {video.material}</p>
+                  <div className="flex items-center justify-between">
+                    {/* Menggunakan button dan fungsi handleWatchNowClick */}
+                    <button
+                      onClick={() => handleWatchNowClick(video.id)}
+                      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition"
+                    >
                       Watch Now
                     </button>
-                  </Link>
-                  <span className="text-sm text-yellow-500 font-bold">
-                    ⭐ {video.rating?.toFixed(1) ?? '-'}
-                  </span>
+                    <span className="text-sm text-yellow-500 font-bold">
+                      ⭐ {video.rating?.toFixed(1) ?? '-'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Dummy Pagination */}
         <div className="flex justify-center mt-10 space-x-2">

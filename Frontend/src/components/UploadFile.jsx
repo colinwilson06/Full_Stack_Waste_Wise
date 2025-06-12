@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react'; // Import useEffect
+import axios from 'axios'; // Gunakan axios untuk permintaan backend agar lebih konsisten
 
 export default function UploadFile() {
   const [file, setFile] = useState(null);
@@ -19,8 +20,17 @@ export default function UploadFile() {
   const [projectCategory, setProjectCategory] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
 
+  // State baru untuk status login
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const allowedTypes = ['image/png', 'image/jpeg', 'video/mp4'];
   const allowedThumbnailTypes = ['image/png', 'image/jpeg'];
+
+  // Cek status login saat komponen dimuat
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   const handleFileChange = async (e) => {
     const selected = e.target.files[0];
@@ -114,52 +124,78 @@ export default function UploadFile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // --- Autentikasi Tambahan ---
+    if (!isLoggedIn) {
+      alert('You must be logged in to upload content.');
+      // Opsional: Redirect ke halaman login
+      // navigate('/login');
+      return;
+    }
+
     if (isUploadingVideo) {
-    setError('Video is still uploading. Please wait...');
-    return;
+      setError('Video is still uploading. Please wait...');
+      return;
     }
 
     if (!videoURL) {
-    setError('Video upload failed or not completed yet.');
-    return;
+      setError('Video upload failed or not completed yet.');
+      return;
     }
 
     if (isUploadingThumbnail) {
-    setThumbnailError('Thumbnail is still uploading. Please wait...');
-    return;
+      setThumbnailError('Thumbnail is still uploading. Please wait...');
+      return;
     }
 
     if (!thumbnailURL) {
-    setThumbnailError('Please upload a thumbnail image.');
-    return;
+      setThumbnailError('Please upload a thumbnail image.');
+      return;
     }
 
-
+    // Ambil token dari localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Authentication token not found. Please log in again.');
+      return;
+    }
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', {
-        method: 'POST',
+      // Gunakan axios untuk mengirim permintaan ke backend
+      // Sertakan token di header Authorization
+      const response = await axios.post('/api/upload', { // Pastikan proxy Vite sudah dikonfigurasi untuk '/api'
+        videoURL,
+        thumbnailURL,
+        thumbnailName,
+        projectTitle,
+        projectCategory,
+        projectDescription
+      }, {
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          videoURL,
-          thumbnailURL,
-          thumbnailName,
-          projectTitle,
-          projectCategory,
-          projectDescription
-        })
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Tambahkan token di sini
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to save data to backend');
-
-      const result = await response.json();
-      alert('Upload berhasil!');
-      console.log('Saved with ID:', result.id);
+      if (response.status === 201) { // axios mengelola status secara otomatis
+        alert('Upload berhasil!');
+        console.log('Saved with ID:', response.data.id);
+        // Reset form setelah berhasil upload (opsional)
+        setFile(null);
+        setFileName('');
+        setVideoURL('');
+        setError('');
+        setThumbnail(null);
+        setThumbnailName('');
+        setThumbnailURL('');
+        setThumbnailError('');
+        setProjectTitle('');
+        setProjectCategory('');
+        setProjectDescription('');
+      }
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Gagal menyimpan data. Silakan coba lagi.');
+      console.error('Upload error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || 'Gagal menyimpan data. Silakan coba lagi.';
+      alert(errorMessage);
     }
   };
 
@@ -264,17 +300,18 @@ export default function UploadFile() {
         </div>
       </div>
 
-        <button
+      <button
         type="submit"
-        disabled={isUploadingVideo || isUploadingThumbnail}
+        // Tombol dinonaktifkan jika sedang mengunggah atau jika belum login
+        disabled={isUploadingVideo || isUploadingThumbnail || !isLoggedIn}
         className={`w-full font-semibold px-6 py-3 rounded-xl text-lg transition ${
-            isUploadingVideo || isUploadingThumbnail
+            (isUploadingVideo || isUploadingThumbnail || !isLoggedIn) // Kondisi untuk styling disabled
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-green-700 text-white hover:bg-green-800'
         }`}
-        >
+      >
         {isUploadingVideo || isUploadingThumbnail ? 'Uploading...' : 'Upload'}
-        </button>
+      </button>
 
     </form>
   );
