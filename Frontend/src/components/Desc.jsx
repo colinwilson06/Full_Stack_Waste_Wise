@@ -17,30 +17,62 @@ export default function Desc({ data }) {
   const handleRating = async (rating) => {
     if (hasRated) return; // Tidak bisa rating lagi
 
+    // Get the authentication token from localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to rate videos.');
+      return;
+    }
+
     setUserRating(rating);
     setHasRated(true);
     saveToLocalStorage(data.id, rating);
-    await submitRating(rating);
+    await submitRating(rating, token); // Pass the token to submitRating
   };
 
-  const submitRating = async (rating) => {
+  const submitRating = async (rating, token) => {
     try {
-      await fetch('http://localhost:5000/api/ratings', {
+      const response = await fetch('http://localhost:5000/api/ratings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Include the authorization token
+        },
         body: JSON.stringify({
           videoId: data.id,
           rating,
         }),
       });
+
+      if (!response.ok) {
+        // Handle non-2xx responses
+        const errorData = await response.json();
+        console.error('Failed to submit rating:', errorData.message);
+        alert(`Failed to submit rating: ${errorData.message}`);
+        // Optionally revert local state if submission failed
+        setHasRated(false);
+        setUserRating(null);
+        removeRatingFromLocalStorage(data.id);
+      }
     } catch (error) {
       console.error('Failed to submit rating:', error);
+      alert('Failed to submit rating due to network error.');
+      // Optionally revert local state if submission failed
+      setHasRated(false);
+      setUserRating(null);
+      removeRatingFromLocalStorage(data.id);
     }
   };
 
   const saveToLocalStorage = (videoId, rating) => {
     const ratedVideos = JSON.parse(localStorage.getItem('ratedVideos') || '{}');
     ratedVideos[videoId] = rating;
+    localStorage.setItem('ratedVideos', JSON.stringify(ratedVideos));
+  };
+
+  const removeRatingFromLocalStorage = (videoId) => {
+    const ratedVideos = JSON.parse(localStorage.getItem('ratedVideos') || '{}');
+    delete ratedVideos[videoId];
     localStorage.setItem('ratedVideos', JSON.stringify(ratedVideos));
   };
 
@@ -81,6 +113,12 @@ export default function Desc({ data }) {
           </div>
         </div>
         <p>{data.description}</p>
+      </div>
+
+      {/* New Uploader Box */}
+      <div className="mb-3 w-[745px]">
+        <h3 className="border-2 px-1.5 py-1 w-[120px] font-semibold rounded-lg text-[18px] mb-4">Uploader</h3>
+        <p className="ml-4 font-medium">{data.uploader}</p> {/* Display uploader's name */}
       </div>
     </div>
   );
