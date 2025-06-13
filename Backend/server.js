@@ -129,7 +129,7 @@ app.post('/api/upload', verifyToken, async (req, res) => {
             projectCategory: projectCategory.toLowerCase(),
             projectDescription,
             createdAt: new Date().toISOString(),
-            uploaderId: req.userId,
+            uploaderId: req.userId, // This is already correctly storing the uploader's ID
         };
 
         const response = await db.insert(doc);
@@ -178,11 +178,21 @@ app.get('/api/videos', async (req, res) => {
             const ratings = ratingResp.docs.map((d) => d.rating);
             const averageRating = ratings.length ? parseFloat((ratings.reduce((a, b) => a + b) / ratings.length).toFixed(2)) : 0;
 
+            let uploaderUsername = 'Anonymous';
+            if (doc.uploaderId) {
+                try {
+                    const uploaderUser = await usersDb.get(doc.uploaderId);
+                    uploaderUsername = uploaderUser.username;
+                } catch (userError) {
+                    console.warn(`Uploader with ID ${doc.uploaderId} not found for video ${doc._id}. Setting to Anonymous.`);
+                }
+            }
+
             return {
                 id: doc._id,
                 title: doc.projectTitle,
                 thumbnail: doc.thumbnailURL,
-                uploader: 'Anonymous',
+                uploader: uploaderUsername, // Use the fetched username
                 date: new Date(doc.createdAt).toLocaleDateString(),
                 material: doc.projectCategory,
                 rating: averageRating,
@@ -205,11 +215,21 @@ app.get('/api/videos/top-rated', async (req, res) => {
             const ratings = ratingResp.docs.map((d) => d.rating);
             const averageRating = ratings.length ? parseFloat((ratings.reduce((a, b) => a + b) / ratings.length).toFixed(2)) : 0;
 
+            let uploaderUsername = 'Anonymous';
+            if (doc.uploaderId) {
+                try {
+                    const uploaderUser = await usersDb.get(doc.uploaderId);
+                    uploaderUsername = uploaderUser.username;
+                } catch (userError) {
+                    console.warn(`Uploader with ID ${doc.uploaderId} not found for video ${doc._id}. Setting to Anonymous.`);
+                }
+            }
+
             return {
                 id: doc._id,
                 title: doc.projectTitle,
                 thumbnail: doc.thumbnailURL,
-                uploader: 'Anonymous',
+                uploader: uploaderUsername, // Use the fetched username
                 date: new Date(doc.createdAt).toLocaleDateString(),
                 material: doc.projectCategory,
                 rating: averageRating,
@@ -233,13 +253,24 @@ app.get('/api/videos/:id', async (req, res) => {
         const ratings = ratingResp.docs.map((d) => d.rating);
         const averageRating = ratings.length ? parseFloat((ratings.reduce((a, b) => a + b) / ratings.length).toFixed(2)) : 0;
 
+        let uploaderUsername = 'Anonymous';
+        if (doc.uploaderId) { // Check if uploaderId exists in the video document
+            try {
+                const uploaderUser = await usersDb.get(doc.uploaderId);
+                uploaderUsername = uploaderUser.username;
+            } catch (userError) {
+                console.error(`Uploader with ID ${doc.uploaderId} not found for video ${doc._id}:`, userError.message);
+                // Keep uploaderUsername as 'Anonymous' if user not found or error
+            }
+        }
+
         res.json({
             id: doc._id,
             title: doc.projectTitle,
             videoURL: doc.videoURL,
             thumbnailURL: doc.thumbnailURL,
             description: doc.projectDescription,
-            uploader: 'Anonymous',
+            uploader: uploaderUsername, // Use the fetched username
             date: new Date(doc.createdAt).toLocaleDateString(),
             material: doc.projectCategory,
             rating: averageRating,
