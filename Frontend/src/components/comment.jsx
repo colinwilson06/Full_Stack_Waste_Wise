@@ -1,24 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 export default function CommentSection() {
-  const comments = [
-    {
-      id: 1,
-      username: '@EcoCrafts101',
-      date: '10 days ago',
-      text: 'Nggak nyangka plastik kresek bisa jadi dompet sekeren ini! Tutorialnya jelas banget, makasih!',
-      likes: 120,
-      avatar: 'avatar2.svg',
-    },
-    {
-      id: 2,
-      username: '@CraftyNadia',
-      date: '18 days ago',
-      text: 'Boleh banget nih dipakai untuk gift buatan tangan. Video ini bener-bener inspiratif!',
-      likes: 140,
-      avatar: 'avatar1.svg',
-    },
-  ];
+  const { id: videoId } = useParams(); 
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const token = localStorage.getItem('token'); 
+
+  
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/comments/${videoId}`);
+        const data = await res.json();
+        setComments(data);
+      } catch (err) {
+        console.error('Failed to fetch comments', err);
+      }
+    };
+
+    if (videoId) fetchComments();
+  }, [videoId]);
+
+  
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const res = await fetch('http://localhost:5000/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ videoId, comment: newComment }),
+      });
+
+      if (res.ok) {
+        setNewComment('');
+        const updated = await res.json();
+        console.log(updated.message);
+        const refresh = await fetch(`http://localhost:5000/api/comments/${videoId}`);
+        const data = await refresh.json();
+        setComments(data);
+      } else {
+        console.error('Failed to post comment');
+      }
+    } catch (err) {
+      console.error('Error posting comment', err);
+    }
+  };
 
   return (
     <div className="w-[820px] mx-22 p-4">
@@ -29,23 +60,28 @@ export default function CommentSection() {
           type="text"
           placeholder="add your comment.."
           className="flex-grow bg-transparent focus:outline-none text-gray-700"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
         />
+        <button
+          onClick={handlePostComment}
+          className="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Post
+        </button>
       </div>
 
-      {comments.map(comment => (
-        <div key={comment.id} className="bg-white shadow-md rounded-md p-4 mb-4">
+      {comments.map((comment, index) => (
+        <div key={index} className="bg-white shadow-md rounded-md p-4 mb-4">
           <div className="flex items-center mb-2">
-            <img src={comment.avatar} alt="avatar" className="w-10 h-10 rounded-full mr-3" />
+            <div className="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
             <div>
-              <p className="text-sm font-semibold">{comment.username}</p>
-              <p className="text-xs text-gray-500">{comment.date}</p>
+              <p className="text-sm font-semibold">@{comment.username}</p>
+              <p className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
-          <p className="italic text-gray-800 mb-2">{comment.text}</p>
-          <div className="flex items-center text-sm text-gray-600">
-            <span className="mr-1">🤍</span> {comment.likes}
-            <button className="ml-6 hover:underline">Reply</button>
-          </div>
+          <p className="italic text-gray-800 mb-2">{comment.comment}</p>
         </div>
       ))}
     </div>
