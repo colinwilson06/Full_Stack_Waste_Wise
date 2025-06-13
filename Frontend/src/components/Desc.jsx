@@ -117,8 +117,8 @@ export default function Desc({ data }) {
 
       {/* New Uploader Box */}
       <div className="mb-3 w-[745px]">
-        <h3 className="border-2 px-1.5 py-1 w-[120px] font-semibold rounded-lg text-[18px] mb-4">Uploader</h3>
-        <p className="ml-4 font-medium">{data.uploader}</p> {/* Display uploader's name */}
+        <h3 className="border-2 px-4 py-1 w-[120px] font-semibold rounded-lg text-[18px] mb-2">Uploader</h3>
+        <p className="font-medium">{data.uploader}</p> {/* Display uploader's name */}
       </div>
     </div>
   );
