@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import.meta.env.VITE_API_URL
 
 export default function SearchMaterial() {
   const location = useLocation();
@@ -23,7 +24,7 @@ export default function SearchMaterial() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await axios.get(`/api/videos?material=${materialType}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/videos?material=${materialType}`);
         const data = response.data;
         setVideos(Array.isArray(data) ? data : []);
       } catch (error) {

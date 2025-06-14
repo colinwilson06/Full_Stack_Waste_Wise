@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const cors = require('cors'); 
 const Nano = require('nano');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -8,11 +8,21 @@ require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const corsOptions = {
+  origin: 'https://wastewise-frontend.fly.dev', // <-- PASTIKAN INI URL FRONTTEND ANDA YANG SUDAH DI-DEPLOY
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Izinkan semua metode yang digunakan
+  allowedHeaders: ['Content-Type', 'Authorization'], // Izinkan Content-Type dan Authorization header
+  credentials: true // Penting jika Anda mengirimkan token (seperti JWT di header Authorization)
+};
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-const nano = Nano('http://Wilson:W1l$0n30@127.0.0.1:5984');
+const couchdbUser = process.env.COUCHDB_USER;
+const couchdbPassword = process.env.COUCHDB_PASSWORD;
+const couchdbHost = process.env.COUCHDB_HOST;
+
+const nano = Nano(`https://${couchdbUser}:${couchdbPassword}@${couchdbHost}`);
 const dbName = 'uploads';
 const ratingsDbName = 'video_ratings';
 const usersDbName = 'users';
@@ -329,7 +339,10 @@ app.get('/api/comments/:videoId', async (req, res) => {
 
 // --- START SERVER ---
 initDB().then(() => {
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}`);
+    const host = '0.0.0.0'; // Pastikan mendengarkan di semua interface
+    const expectedPort = 3000; // Sesuai dengan peringatan dari Fly.io
+
+    app.listen(expectedPort, host, () => {
+        console.log(`Server running at http://${host}:${expectedPort}`);
     });
 });

@@ -6,7 +6,6 @@ export default function Desc({ data }) {
   const [hasRated, setHasRated] = useState(false);
 
   useEffect(() => {
-    // Cek di localStorage apakah user sudah memberi rating untuk video ini
     const ratedVideos = JSON.parse(localStorage.getItem('ratedVideos') || '{}');
     if (ratedVideos[data.id]) {
       setUserRating(ratedVideos[data.id]);
@@ -15,9 +14,8 @@ export default function Desc({ data }) {
   }, [data.id]);
 
   const handleRating = async (rating) => {
-    if (hasRated) return; // Tidak bisa rating lagi
+    if (hasRated) return;
 
-    // Get the authentication token from localStorage
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in to rate videos.');
@@ -27,37 +25,29 @@ export default function Desc({ data }) {
     setUserRating(rating);
     setHasRated(true);
     saveToLocalStorage(data.id, rating);
-    await submitRating(rating, token); // Pass the token to submitRating
+    await submitRating(rating, token);
   };
 
   const submitRating = async (rating, token) => {
     try {
-      const response = await fetch('http://localhost:5000/api/ratings', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Include the authorization token
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          videoId: data.id,
-          rating,
-        }),
+        body: JSON.stringify({ videoId: data.id, rating }),
       });
 
       if (!response.ok) {
-        // Handle non-2xx responses
         const errorData = await response.json();
-        console.error('Failed to submit rating:', errorData.message);
         alert(`Failed to submit rating: ${errorData.message}`);
-        // Optionally revert local state if submission failed
         setHasRated(false);
         setUserRating(null);
         removeRatingFromLocalStorage(data.id);
       }
     } catch (error) {
-      console.error('Failed to submit rating:', error);
       alert('Failed to submit rating due to network error.');
-      // Optionally revert local state if submission failed
       setHasRated(false);
       setUserRating(null);
       removeRatingFromLocalStorage(data.id);
@@ -77,11 +67,12 @@ export default function Desc({ data }) {
   };
 
   return (
-    <div className="p-5 ml-23">
-      <div className="mb-3 w-[745px]">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="border-2 px-1.5 py-1 w-[120px] font-semibold rounded-lg text-[18px]">Description</h3>
-          <div className="flex items-center gap-1">
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-4xl mx-auto">
+      {/* Description Section */}
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h3 className="border-2 px-2 py-1 w-fit font-semibold rounded-lg text-[18px]">Description</h3>
+          <div className="flex items-center gap-1 mt-2 sm:mt-0">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -112,13 +103,13 @@ export default function Desc({ data }) {
             )}
           </div>
         </div>
-        <p>{data.description}</p>
+        <p className="text-gray-700 text-base">{data.description}</p>
       </div>
 
-      {/* New Uploader Box */}
-      <div className="mb-3 w-[745px]">
-        <h3 className="border-2 px-4 py-1 w-[120px] font-semibold rounded-lg text-[18px] mb-2">Uploader</h3>
-        <p className="font-medium">{data.uploader}</p> {/* Display uploader's name */}
+      {/* Uploader Section */}
+      <div className="mb-6">
+        <h3 className="border-2 px-4 py-1 w-fit font-semibold rounded-lg text-[18px] mb-2">Uploader</h3>
+        <p className="font-medium text-gray-800">{data.uploader}</p>
       </div>
     </div>
   );

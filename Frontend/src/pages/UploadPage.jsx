@@ -1,5 +1,5 @@
 import React from 'react';
-import UploadHeader from '../components/UploadHeader';
+import UploadHeader from '../components/Uploadheader';
 import UploadFile from '../components/UploadFile';
 
 export default function UploadPage() {

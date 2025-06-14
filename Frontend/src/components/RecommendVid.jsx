@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import axios from 'axios';
+import.meta.env.VITE_API_URL
 
 export default function RecommendVid({ isLatestTutorials }) {
   const [videos, setVideos] = useState([]);
@@ -17,7 +18,7 @@ export default function RecommendVid({ isLatestTutorials }) {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await axios.get('/api/videos/top-rated');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/videos/top-rated`);
         const data = response.data;
 
         if (Array.isArray(data)) {

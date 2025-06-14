@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'; // Import useEffect
-import axios from 'axios'; // Gunakan axios untuk permintaan backend agar lebih konsisten
+import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 export default function UploadFile() {
   const [file, setFile] = useState(null);
@@ -20,7 +20,6 @@ export default function UploadFile() {
   const [projectCategory, setProjectCategory] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
 
-  // State baru untuk status login
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const allowedTypes = ['image/png', 'image/jpeg', 'video/mp4'];
@@ -124,7 +123,6 @@ export default function UploadFile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // --- Autentikasi Tambahan ---
     if (!isLoggedIn) {
       alert('You must be logged in to upload content.');
       // Opsional: Redirect ke halaman login
@@ -160,9 +158,14 @@ export default function UploadFile() {
     }
 
     try {
-      // Gunakan axios untuk mengirim permintaan ke backend
-      // Sertakan token di header Authorization
-      const response = await axios.post('/api/upload', { // Pastikan proxy Vite sudah dikonfigurasi untuk '/api'
+      // Menggunakan variabel lingkungan VITE_API_URL
+      // Pastikan file .env Anda memiliki VITE_API_URL=https://wastewise-backend.fly.dev
+      const backendBaseUrl = import.meta.env.VITE_API_URL; 
+      if (!backendBaseUrl) {
+          throw new Error("VITE_API_URL is not defined in environment variables.");
+      }
+
+      const response = await axios.post(`${backendBaseUrl}/api/upload`, {
         videoURL,
         thumbnailURL,
         thumbnailName,
@@ -172,7 +175,7 @@ export default function UploadFile() {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Tambahkan token di sini
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -302,17 +305,15 @@ export default function UploadFile() {
 
       <button
         type="submit"
-        // Tombol dinonaktifkan jika sedang mengunggah atau jika belum login
         disabled={isUploadingVideo || isUploadingThumbnail || !isLoggedIn}
         className={`w-full font-semibold px-6 py-3 rounded-xl text-lg transition ${
-            (isUploadingVideo || isUploadingThumbnail || !isLoggedIn) // Kondisi untuk styling disabled
+            (isUploadingVideo || isUploadingThumbnail || !isLoggedIn)
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-green-700 text-white hover:bg-green-800'
         }`}
       >
         {isUploadingVideo || isUploadingThumbnail ? 'Uploading...' : 'Upload'}
       </button>
-
     </form>
   );
 }
