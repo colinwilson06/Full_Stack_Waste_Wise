@@ -1,0 +1,8 @@
+FROM couchdb:3
+
+# (Opsional) Set username dan password default
+ENV COUCHDB_USER=Wilson
+ENV COUCHDB_PASSWORD=W1l$0n30
+
+# Expose port default CouchDB
+EXPOSE 5984
