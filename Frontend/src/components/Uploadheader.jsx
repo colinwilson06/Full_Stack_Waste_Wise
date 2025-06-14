@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function UploadHeader() {
+export default function Uploadheader() {
   return (
     <div className="bg-green-100 rounded-xl p-6 mx-auto mt-10 max-w-5xl shadow-md flex items-center justify-between">
       <div className="flex-1 pr-8">

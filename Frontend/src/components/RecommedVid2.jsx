@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import.meta.env.VITE_API_URL
 
 export default function RecommedVid2({ material }) {
   const [videos, setVideos] = useState([]);
@@ -7,29 +8,35 @@ export default function RecommedVid2({ material }) {
 
   useEffect(() => {
     if (!material) return;
-
-    fetch(`http://localhost:5000/api/videos?material=${material}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/videos?material=${material}`)
       .then(res => res.json())
       .then(data => setVideos(data))
       .catch(err => console.error('Failed to fetch videos:', err));
-  }, [material]); // refetch setiap material berubah
+  }, [material]);
 
   const handleWatchNow = (id) => {
     navigate(`/watch/${id}`);
   };
 
   return (
-    <div className="pl-4 border-gray-400 mt-20 mr-30 -mx-15">
+    <div className="space-y-4 pr-2">
       {videos.map((video) => (
-        <div key={video.id} className="bg-white rounded-lg shadow p-2 mb-4">
-          <p className="text-xs text-gray-500 mb-1">Uploaded by {video.uploader}</p>
+        <div
+          key={video.id}
+          className="bg-white rounded-lg shadow p-3 overflow-hidden max-w-full"
+        >
+          <p className="text-xs text-gray-500 mb-1 break-words">Uploaded by {video.uploader}</p>
           <p className="text-xs text-gray-400 mb-2">{video.date}</p>
-          <img src={video.thumbnail} alt={video.title} className="rounded mb-2 w-full h-auto" />
-          <p className="text-sm font-semibold">{video.title}</p>
-          <p className="text-xs text-gray-600">Material: {video.material}</p>
+          <img
+            src={video.thumbnail}
+            alt={video.title}
+            className="rounded mb-2 w-full h-auto max-h-48 object-cover"
+          />
+          <p className="text-sm font-semibold break-words">{video.title}</p>
+          <p className="text-xs text-gray-600 mb-1 break-words">Material: {video.material}</p>
           <div className="flex items-center justify-between mt-2">
             <button
-              className="bg-green-600 text-white px-3 py-1 rounded text-xs"
+              className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
               onClick={() => handleWatchNow(video.id)}
             >
               Watch Now

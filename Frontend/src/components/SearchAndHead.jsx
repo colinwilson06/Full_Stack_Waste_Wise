@@ -19,12 +19,12 @@ export default function SearchAndHead() {
   };
 
   return (
-    <div className="bg-white p-8 md:p-12 mb-10">
-      <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-6 text-left">
+    <div className="bg-white px-4 sm:px-6 md:px-12 py-10 mb-10">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800 mb-6 text-left">
         Find Your New Recycling Idea
       </h1>
 
-      <div className="w-[1200px] relative">
+      <div className="relative max-w-screen-lg w-full mx-auto lg:mx-1">
         <input
           type="text"
           value={query}

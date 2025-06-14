@@ -4,38 +4,23 @@ import axios from "axios";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [values, setValues] = useState({
-    username: '', // <--- Ganti 'email' menjadi 'username' di state
-    password: ''
-  });
-
+  const [values, setValues] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
-  const handleCheckboxChange = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleChanges = (e) => {
-    setValues({ ...values, [e.target.name]: e.target.value });
-  };
+  const handleCheckboxChange = () => setShowPassword(!showPassword);
+  const handleChanges = (e) => setValues({ ...values, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // *** PERBAIKAN DI SINI: Ubah URL API ***
-      const response = await axios.post('/auth/login', { // <-- Hapus '/api' di sini
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         username: values.username,
         password: values.password,
       });
 
       if (response.status === 200) {
         localStorage.setItem("token", response.data.token);
-
-        // Backend Anda sudah mengembalikan 'username' di respons login,
-        // jadi Anda tidak perlu melakukan permintaan '/api/auth/home' lagi.
-        // Ini menghemat satu panggilan API.
-        localStorage.setItem("username", response.data.username); // <-- Ambil langsung dari response login
-
+        localStorage.setItem("username", response.data.username);
         navigate("/");
         window.dispatchEvent(new Event("usernameChanged"));
       }
@@ -47,29 +32,30 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white px-4 py-50">
+    <div className="flex flex-col md:flex-row justify-center items-center min-h-screen bg-white px-6 py-10 mb-20">
       {/* Left Section */}
-      <div className="w-1/2 text-left -mt-40 px-10">
-        <h1 className="text-green-800 janda-font text-[100px] leading-tight">
+      <div className="w-full md:w-1/2 px-4 md:px-10 sm:text-center md:text-left flex flex-col justify-center mb-30 lg:mb-10">
+        <h1 className="text-green-800 janda-font text-5xl md:text-6xl lg:text-7xl leading-tight lg:leading-[1.1]">
           WELCOME <br /> BACK!
         </h1>
-        <p className="mt-4 text-gray-600 text-[16px] max-w-md">
+        <p className="mt-4 text-gray-600 text-base sm:text-lg md:text-lg lg:text-xl max-w-lg sm:mx-auto md:mx-0 sm:text-center md:text-left">
           Keep transforming waste into something meaningful.
           <br />
           Sign in to explore new ideas, share your latest eco-creations, and stay inspired with our green community.
         </p>
       </div>
 
-      {/* Right Section (Card) */}
-      <div className="w-[450px] bg-white shadow-2xl rounded-4xl p-15 mb-30">
-        <h2 className="text-green-700 text-[42px] font-bold text-center mb-6">Sign In</h2>
+
+      {/* Right Section */}
+      <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8">
+        <h2 className="text-green-700 text-3xl md:text-4xl font-bold text-center mb-6">Sign In</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             className="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
             placeholder="Username"
             type="text"
-            name="username" // <--- Ganti 'name="email"' menjadi 'name="username"'
+            name="username"
             value={values.username}
             onChange={handleChanges}
             required
@@ -100,7 +86,7 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mb-5 mt-5">
+        <p className="text-center text-sm text-gray-600 mt-6">
           Don’t have an account?{" "}
           <Link to="/sign-up" className="font-semibold text-black">
             Sign up now
