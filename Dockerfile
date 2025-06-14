@@ -1,8 +1,8 @@
 FROM couchdb:3
 
-
 ENV COUCHDB_USER=Wilson
 ENV COUCHDB_PASSWORD=W1l$0n30
 
-
 EXPOSE 5984
+
+CMD ["couchdb"]
